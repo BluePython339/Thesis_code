@@ -11,3 +11,24 @@ def MalMem(vocab_size, emb_size,net_size, output_pars):
 		])
 	return model
 
+
+def train_rnn(x_train, y_train, max_len, mask):
+	epochs = 10
+	batch_size = 200
+
+	vec_dims = 1
+	hidden_units = 256
+	in_shape = (max_len, vec_dims)
+
+	model = keras.Sequential()
+
+	model.add(keras.layers.Masking(mask, name="in_layer", input_shape=in_shape,))
+	model.add(keras.layers.LSTM(hidden_units, return_sequences=False))
+	model.add(keras.layers.Dense(1, activation='relu', name='output'))
+
+	model.compile(loss='binary_crossentropy', optimizer='rmsprop')
+	print("well we got here at least")
+	model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs,
+	validation_split=0.05)
+
+	return model
