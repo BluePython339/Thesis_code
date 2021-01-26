@@ -38,6 +38,16 @@ if __name__ == "__main__":
     for i in aptperc:
         print("group: {}, percentage: {}%".format(i,aptperc.get(i)))
 
+    with open("train_set.csv", 'w+') as f:
+        for i in range(1962):
+            f.write("/content/drive/MyDrive/Colab Notebooks/datast/data/train/{}.json\n".format(i))
+
+    with open("test_set.csv", 'w+') as f:
+        for i in range(949):
+            f.write("/content/drive/MyDrive/Colab Notebooks/datast/data/test/{}.json\n".format(i))
+
+
+
 
 
 
