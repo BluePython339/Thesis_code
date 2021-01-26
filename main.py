@@ -4,7 +4,8 @@ import random
 from MalMem import *
 import tensorflow as tf
 import json
-from preprocessor import Decomp_tokenizer, write_to_data_file
+from sizeChecker import get_file_size
+from preprocessor import *
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from sklearn.model_selection import train_test_split
 import numpy as np
@@ -12,12 +13,12 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-i", "--input", help="Input csv with file names and types", type=str)
 parser.add_argument("-d", "--data", help="Path to data files", type =str)
 
-def map_files(csv_data, base_path):
+def map_files(csv_data):
 	mapped_data = []
 	print("[*Reading in data files*]")
 	for i in tqdm(csv_data):
 		#print(base_path+i[0])
-		with open(base_path+i[0], 'r') as mfile:
+		with open(i[0], 'r') as mfile:
 			data = mfile.read().replace('\n', ' ')
 			mapped_data.append((data, i[1]))
 	return mapped_data
@@ -29,13 +30,16 @@ def split_train_test(full_data):
 
 	return (x_train, y_train),(x_test, y_test)
 
-def open_csv(fname):
+def open_csv(fname, base_path):
+	fin = []
 	with open(fname, 'r') as f:
 		data = f.readlines()
 
 	csv_data = [i.strip('\n').split(',') for i in data]
-	
-	return csv_data
+	for i in csv_data:
+		if get_file_size(base_path+i[0]) < 3000000:
+			fin.append((base_path+i[0],i[1]))
+	return fin
 
 def compress_list(lists):
 	fin = []
@@ -57,7 +61,7 @@ if __name__ == "__main__":
 
 	tokenizer = Decomp_tokenizer()
 	args = parser.parse_args()
-	full_data = map_files(open_csv(args.input), args.data)
+	full_data = map_files(open_csv(args.input,args.data))
 
 	#print(len(full_data))
 	train_data, test_data = split_train_test(full_data)
@@ -80,20 +84,20 @@ if __name__ == "__main__":
 	train_malware = tokenizer.tokenizeData(train_malware)
 	max_len = len(max(train_malware, key=len))
 	print(max_len)
-	#train_keys = tokenizer.tokenizeLabels(tqdm(train_keys))
-	#train_data = zip(train_malware, train_keys)
+	train_keys = tokenizer.tokenizeLabels(tqdm(train_keys))
+	train_data = zip(train_malware, train_keys)
 	print("[*Train data fitted and ready for writing to file*]")
-	#test_malware = tokenizer.tokenizeData(test_malware)
-	#test_keys = tokenizer.tokenizeLabels(tqdm(test_keys))
-	#test_data = zip(test_malware, test_keys)
+	test_malware = tokenizer.tokenizeData(test_malware)
+	test_keys = tokenizer.tokenizeLabels(tqdm(test_keys))
+	test_data = zip(test_malware, test_keys)
 
 	print(type(test_data))
 	print("[* TRAIN DATA TO FILE *]")
-	#for index, i in enumerate(tqdm(train_data)):
-	#		write_to_data_file(i,str(index))
+	for index, i in enumerate(tqdm(train_data)):
+			write_to_data_file(i,str(index),test=False,max_len=max_len)
 	print("[* TEST DATA TO FILE *]")
-	#for index, i in enumerate(tqdm(test_data)):
-	#	write_to_data_file(i,str(index), test=True)
+	for index, i in enumerate(tqdm(test_data)):
+		write_to_data_file(i,str(index), test=True,max_len=max_len)
 
 
 

@@ -1,4 +1,5 @@
 import os
+import sys
 
 
 def open_csv(fname):
@@ -22,14 +23,13 @@ def get_file_paths(csvdata, base_path ):
     return fin,apt
 
 if __name__ == "__main__":
-
     a, apt = get_file_paths(open_csv("fixed.csv"), "/home/bluepython339/Documents/thesis/decompfiles/data/")
     aptfull = apt.copy()
     aptperc = apt.copy()
     b = sorted(a, key=lambda i : i[0])
     for i in b:
         aptfull[i[1]] += 1
-        if i[0] > 1000000:
+        if i[0] > int(sys.argv[1]):
             apt[i[1]] += 1
 
     for i in apt:

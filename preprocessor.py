@@ -8,7 +8,6 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.preprocessing.text import Tokenizer
 import numpy as np
 
-MAX_LEN = 8175412
 
 class Decomp_tokenizer(object):
 
@@ -80,9 +79,10 @@ class Decomp_tokenizer(object):
 			self.Tokenizer = keras.preprocessing.text.tokenizer_from_json(json.load(f))
 
 
-def write_to_data_file(data,filename, test=False):
+def write_to_data_file(data,filename, test=False, max_len=0):
+
 	a = {
-		"data": data[0],
+		"data": np_array_to_int(pad_sequences([data[0]], padding='post',maxlen=max_len)[0]),
 		"key": data[1]
 	}
 	if test:
