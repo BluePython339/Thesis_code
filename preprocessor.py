@@ -3,14 +3,17 @@ import json
 from tensorflow import keras
 import random
 from tqdm import tqdm
+from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 from tensorflow.keras.preprocessing.text import Tokenizer
 import numpy as np
 
+MAX_LEN = 8175412
+
 class Decomp_tokenizer(object):
 
 	def __init__(self):
-		self.Tokenizer =Tokenizer(num_words =100, oov_token = "<NIIS>")
+		self.Tokenizer =Tokenizer(num_words=100, oov_token = "<NIIS>")
 		self.label_mapping = {}
 
 	def fit(self, data):
@@ -27,7 +30,7 @@ class Decomp_tokenizer(object):
 	def tokenizeLabels(self, all):
 		outs = []
 		for i in all:
-			outs.append(tf.convert_to_tensor([self.label_mapping.get(i)]))
+			outs.append(self.label_mapping.get(i))
 		return outs
 
 	def tokenize_labels_to_file(self, filename, data):
@@ -59,10 +62,7 @@ class Decomp_tokenizer(object):
 
 	def tokenizeData(self, data):
 		tokens = self.Tokenizer.texts_to_sequences(tqdm(data))
-		fin = []
-		for i in tqdm(tokens):
-			fin.append(tf.convert_to_tensor(i))
-		return fin
+		return tokens
 
 	def __str__(self):
 		return str(self.Tokenizer.word_index)
@@ -80,5 +80,20 @@ class Decomp_tokenizer(object):
 			self.Tokenizer = keras.preprocessing.text.tokenizer_from_json(json.load(f))
 
 
+def write_to_data_file(data,filename, test=False):
+	a = {
+		"data": data[0],
+		"key": data[1]
+	}
+	if test:
+		with open("data/test/{}.json".format(filename),'w+') as f:
+			f.write(json.dumps(a))
+	else:
+		with open("data/train/{}.json".format(filename),'w+') as f:
+			f.write(json.dumps(a))
 
-
+def np_array_to_int(data):
+	fin = []
+	for i in data:
+		fin.append(int(i))
+	return fin

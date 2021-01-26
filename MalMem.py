@@ -14,7 +14,7 @@ def MalMem(vocab_size, emb_size,net_size, output_pars):
 
 def train_rnn(x_train, y_train, max_len, mask):
 	epochs = 10
-	batch_size = 200
+	batch_size = 10
 
 	vec_dims = 1
 	hidden_units = 256

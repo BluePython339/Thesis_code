@@ -3,7 +3,9 @@ from tqdm import tqdm
 import random
 from MalMem import *
 import tensorflow as tf
-from preprocessor import Decomp_tokenizer
+import json
+from preprocessor import Decomp_tokenizer, write_to_data_file
+from tensorflow.keras.preprocessing.sequence import pad_sequences
 from sklearn.model_selection import train_test_split
 import numpy as np
 parser = argparse.ArgumentParser()
@@ -50,28 +52,53 @@ def np_list(lists):
 	return np.array(fin)
 
 
+
 if __name__ == "__main__":
 
 	tokenizer = Decomp_tokenizer()
 	args = parser.parse_args()
-	#full_data = map_files(open_csv(args.input), args.data)
+	full_data = map_files(open_csv(args.input), args.data)
 
 	#print(len(full_data))
-	#train_data, test_data = split_train_test(full_data)
-	#train_malware = train_data[0]
-	#train_keys = train_data[1]
-	#test_malware = test_data[0]
-	#test_keys = test_data[1]
+	train_data, test_data = split_train_test(full_data)
+	#tokenizer.recover_status()
 
-	#print("[*Fitting the tokenizer*]")
-	#tokenizer.fit(tqdm(train_malware))
-	#tokenizer.fit_label(train_keys)
-	#tokenizer.save_status()
+	train_malware = train_data[0]
+	train_keys = train_data[1]
+	test_malware = test_data[0]
+	test_keys = test_data[1]
+
+	print("[*Fitting the tokenizer*]")
+	tokenizer.fit(tqdm(train_malware))
+	tokenizer.fit_label(train_keys)
+	tokenizer.save_status()
 
 	#tokenizer.recover_status()
 	#tokenizer.save_status()
 
-	#print("[*Tokenizing data and writing to file*]")
+	print("[*Tokenizing data and writing to file*]")
+	train_malware = tokenizer.tokenizeData(train_malware)
+	max_len = len(max(train_malware, key=len))
+	print(max_len)
+	#train_keys = tokenizer.tokenizeLabels(tqdm(train_keys))
+	#train_data = zip(train_malware, train_keys)
+	print("[*Train data fitted and ready for writing to file*]")
+	#test_malware = tokenizer.tokenizeData(test_malware)
+	#test_keys = tokenizer.tokenizeLabels(tqdm(test_keys))
+	#test_data = zip(test_malware, test_keys)
+
+	print(type(test_data))
+	print("[* TRAIN DATA TO FILE *]")
+	#for index, i in enumerate(tqdm(train_data)):
+	#		write_to_data_file(i,str(index))
+	print("[* TEST DATA TO FILE *]")
+	#for index, i in enumerate(tqdm(test_data)):
+	#	write_to_data_file(i,str(index), test=True)
+
+
+
+
+
 	#tokenizer.tokenize_data_to_file("fitted_train_data", train_malware)
 	#tokenizer.tokenize_data_to_file("fitted_test_data", test_malware)
 	#tokenizer.tokenize_labels_to_file("fitted_train_keys", train_keys)
@@ -79,16 +106,17 @@ if __name__ == "__main__":
 
 
 	print("[*Testing the read back proccess*]")
-	train_keys = tokenizer.read_data_from_file("fitted_train_keys")
-	test_keys = tokenizer.read_data_from_file("fitted_test_keys")
-	train_malware = tokenizer.read_data_from_file("fitted_train_data")
-	test_malware = tokenizer.read_data_from_file("fitted_test_data")
+	#train_keys = tokenizer.read_data_from_file("fitted_train_keys")
+	#test_keys = tokenizer.read_data_from_file("fitted_test_keys")
+	#train_malware = tokenizer.read_data_from_file("fitted_train_data")
+	#test_malware = tokenizer.read_data_from_file("fitted_test_data")
 
-	train_keys = compress_list(train_keys)
+	#train_keys = compress_list(train_keys)
+	#max_len = len(max(train_malware, key=len))
 
-	train_malware = np_list(train_malware)
-	train_keys = np.array(train_keys)
-	print("[*All data ready for use*]")
+	#train_malware = np.array(pad_sequences(train_malware[:10], padding='post', maxlen=max_len)).astype(np.float32)
+	#train_keys = np.array(train_keys[:10])
+	#print("[*All data ready for use*]")
 
 	#print("[*Tokenising the test data*]")
 	#test_malware = tokenizer.tokenizeData(test_malware)
@@ -101,14 +129,15 @@ if __name__ == "__main__":
 
 	#print(key_map)
 
-	max_len = len(max(train_malware[:10], key=len))
-	#model = MalMem(max_len, 64, 128, 12)
+	#model = MalMem(max_len, 200, 128, 12)
 	#model.compile()
-	print("[*Training the model*]")
-	print("Train set: {}, Train key: {}".format(type(train_malware), type(train_keys)))
-	print("Test set: {}, Test key: {}".format(len(test_malware), len(test_keys)))
-	#model.fit(train_malware, train_keys, validation_data=(test_malware, test_keys) )
-	train_rnn(train_malware[:10], train_keys[:10], max_len, 0)
+	#epochs = 10
+	#batches = 10
+	#print("[*Training the model*]")
+	#print("Train set: {}, Train key: {}".format(type(train_malware), type(train_keys)))
+	#print("Test set: {}, Test key: {}".format(len(test_malware), len(test_keys)))
+	#model.fit(train_malware, train_keys, validation_data=(test_malware, test_keys), batch_size=batches, epochs=epochs)
+	#train_rnn(train_malware, train_keys, max_len, 0)
 
 	
 
