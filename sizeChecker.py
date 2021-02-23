@@ -29,15 +29,25 @@ if __name__ == "__main__":
     b = sorted(a, key=lambda i : i[0])
     for i in b:
         aptfull[i[1]] += 1
-        if i[0] > int(sys.argv[1]):
+        if 100 < i[0] > int(sys.argv[1]):
             apt[i[1]] += 1
-
+    total_in_scope = 0
+    total = 0
     for i in apt:
+        total_in_scope += apt.get(i)
         aptperc[i] = (apt.get(i)/aptfull.get(i))*100
 
-    for i in aptperc:
-        print("group: {}, percentage: {}%".format(i,aptperc.get(i)))
+    for i in apt:
+        print("group: {}, amount: {}".format(i,apt.get(i)))
+    print('\n'*2)
+    print("Total sample count: {}".format(total_in_scope))
+    #exit()
+    for i in aptfull:
+        total += aptfull.get(i)
+        print("group: {}, total amount: {} ".format(i, aptfull.get(i)))
 
+    print("total set size: {}".format(total))
+    exit()
     with open("train_set.csv", 'w+') as f:
         for i in range(1962):
             f.write("/content/drive/MyDrive/Colab Notebooks/datast/data/train/{}.json\n".format(i))

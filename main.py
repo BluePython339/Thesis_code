@@ -19,12 +19,12 @@ def map_files(csv_data):
 	for i in tqdm(csv_data):
 		#print(base_path+i[0])
 		with open(i[0], 'r') as mfile:
-			data = mfile.read().replace('\n', ' ')
-			mapped_data.append((data, i[1]))
+			data = mfile.read()
+			mapped_data.append((data, i[1], i[0]))
 	return mapped_data
 
 def split_train_test(full_data):
-	y =  [i[1] for i in full_data]
+	y =  [(i[1], i[2]) for i in full_data]
 	x =  [i[0] for i in full_data]
 	x_train, x_test, y_train, y_test = train_test_split(x,y, test_size=0.33, shuffle=True)
 
@@ -37,7 +37,7 @@ def open_csv(fname, base_path):
 
 	csv_data = [i.strip('\n').split(',') for i in data]
 	for i in csv_data:
-		if get_file_size(base_path+i[0]) < 3000000:
+		if 100 < get_file_size(base_path+i[0]) < 3000000:
 			fin.append((base_path+i[0],i[1]))
 	return fin
 
@@ -55,7 +55,19 @@ def np_list(lists):
 
 	return np.array(fin)
 
+def to_config(filename, train_len, test_len, max_len):
+	a ={
+	"train_len": train_len,
+	"test_len": test_len,
+	"max_len": max_len
+	}
+	with open(filename, 'w+') as f:
+		f.write(json.dumps(a))
 
+def split_to_file(filename, data):
+	with open(filename, 'w+') as f:
+		for i in data:
+			f.write("{}\n".format(i))
 
 if __name__ == "__main__":
 
@@ -68,80 +80,68 @@ if __name__ == "__main__":
 	#tokenizer.recover_status()
 
 	train_malware = train_data[0]
-	train_keys = train_data[1]
+	train_keys = [i[0] for i in train_data[1]]
 	test_malware = test_data[0]
-	test_keys = test_data[1]
+	test_keys = [i[0] for i in test_data[1]]
+
+	train_files = [i[1] for i in train_data[1]]
+	test_files = [i[1] for i in test_data[1]]
+
+	split_to_file("test_set.csv", test_files)
+	split_to_file("train_set.csv", train_files)
+
 
 	print("[*Fitting the tokenizer*]")
-	tokenizer.fit(tqdm(train_malware))
+	tokenizer.fit_args(tqdm(train_malware))
+	tokenizer.fit_instr(tqdm(train_malware))
 	tokenizer.fit_label(train_keys)
-	tokenizer.save_status()
+	#tokenizer.save_status()
 
 	#tokenizer.recover_status()
 	#tokenizer.save_status()
 
 	print("[*Tokenizing data and writing to file*]")
-	train_malware = tokenizer.tokenizeData(train_malware)
-	max_len = len(max(train_malware, key=len))
-	print(max_len)
+	train_malware_args = tokenizer.tokenize_args(train_malware)
+	train_malware_instr = tokenizer.tokenize_instr(train_malware)
+	max_len_args = len(max(train_malware_args, key=len))
+	max_len_inst = len(max(train_malware_instr, key=len))
 	train_keys = tokenizer.tokenizeLabels(tqdm(train_keys))
-	train_data = zip(train_malware, train_keys)
+	train_data_args = zip(train_malware_args, train_keys)
+	train_data_instr = zip(train_malware_instr, train_keys)
+
 	print("[*Train data fitted and ready for writing to file*]")
-	test_malware = tokenizer.tokenizeData(test_malware)
+	test_malware_args = tokenizer.tokenize_args(test_malware)
+	test_malware_instr = tokenizer.tokenize_instr(test_malware)
 	test_keys = tokenizer.tokenizeLabels(tqdm(test_keys))
-	test_data = zip(test_malware, test_keys)
+	test_data_args = zip(test_malware_args, test_keys)
+	test_data_instr = zip(test_malware_instr, test_keys)
 
-	print(type(test_data))
-	print("[* TRAIN DATA TO FILE *]")
-	for index, i in enumerate(tqdm(train_data)):
-			write_to_data_file(i,str(index),test=False,max_len=max_len)
-	print("[* TEST DATA TO FILE *]")
-	for index, i in enumerate(tqdm(test_data)):
-		write_to_data_file(i,str(index), test=True,max_len=max_len)
+	train_len = len(train_malware_args)
+	test_len = len(test_malware_args)
+
+	to_config("tokenized_with_args.config", train_len,test_len,max_len_args)
+	to_config("tokenized_with_instructions.config", train_len, test_len,max_len_inst)
+
+	print("[* ARG TRAIN DATA TO FILE *]")
+	for index, i in enumerate(tqdm(train_data_args)):
+			write_to_data_file("args",i,str(index),test=False,max_len=max_len_args)
+	print("[* ARG TEST DATA TO FILE *]")
+	for index, i in enumerate(tqdm(test_data_args)):
+		write_to_data_file("args",i,str(index), test=True,max_len=max_len_args)
+
+	print("[* INSTR TRAIN DATA TO FILE *]")
+	for index, i in enumerate(tqdm(train_data_instr)):
+			write_to_data_file("instr",i,str(index),test=False,max_len=max_len_inst)
+	print("[* INSTR TEST DATA TO FILE *]")
+	for index, i in enumerate(tqdm(test_data_instr)):
+		write_to_data_file("instr",i,str(index), test=True,max_len=max_len_inst)
 
 
 
 
 
-	#tokenizer.tokenize_data_to_file("fitted_train_data", train_malware)
-	#tokenizer.tokenize_data_to_file("fitted_test_data", test_malware)
-	#tokenizer.tokenize_labels_to_file("fitted_train_keys", train_keys)
-	#tokenizer.tokenize_labels_to_file("fitted_test_keys", test_keys)
 
 
-	print("[*Testing the read back proccess*]")
-	#train_keys = tokenizer.read_data_from_file("fitted_train_keys")
-	#test_keys = tokenizer.read_data_from_file("fitted_test_keys")
-	#train_malware = tokenizer.read_data_from_file("fitted_train_data")
-	#test_malware = tokenizer.read_data_from_file("fitted_test_data")
 
-	#train_keys = compress_list(train_keys)
-	#max_len = len(max(train_malware, key=len))
 
-	#train_malware = np.array(pad_sequences(train_malware[:10], padding='post', maxlen=max_len)).astype(np.float32)
-	#train_keys = np.array(train_keys[:10])
-	#print("[*All data ready for use*]")
-
-	#print("[*Tokenising the test data*]")
-	#test_malware = tokenizer.tokenizeData(test_malware)
-	#print("[*Tokenising the train data*]")
-	#train_malware = tokenizer.tokenizeData(train_malware)
-	#train_key = train_data[1]
-	#test_key = test_data[1]
-	#train_key, key_map = tokenizer.tokenizeLabels(train_key)
-	#test_key, _ = tokenizer.tokenizeLabels(test_key,key_map)
-
-	#print(key_map)
-
-	#model = MalMem(max_len, 200, 128, 12)
-	#model.compile()
-	#epochs = 10
-	#batches = 10
-	#print("[*Training the model*]")
-	#print("Train set: {}, Train key: {}".format(type(train_malware), type(train_keys)))
-	#print("Test set: {}, Test key: {}".format(len(test_malware), len(test_keys)))
-	#model.fit(train_malware, train_keys, validation_data=(test_malware, test_keys), batch_size=batches, epochs=epochs)
-	#train_rnn(train_malware, train_keys, max_len, 0)
-
-	
 

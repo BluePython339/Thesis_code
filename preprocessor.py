@@ -12,18 +12,29 @@ import numpy as np
 class Decomp_tokenizer(object):
 
 	def __init__(self):
-		self.Tokenizer =Tokenizer(num_words=100, oov_token = "<NIIS>")
+		self.Tokenizer_args =Tokenizer(num_words=100,split=' ')
+		self.Tokenizer_instr =Tokenizer(num_words=100,split='\n')
 		self.label_mapping = {}
 
-	def fit(self, data):
+	def fit_instr(self, data):
 		#fdata = random.sample(data, 50)
-		self.Tokenizer.fit_on_texts(data)
+		self.Tokenizer_instr.fit_on_texts(data)
+
+	def fit_args(self, data):
+		data = self.no_newline(data)
+		self.Tokenizer_args.fit_on_texts(data)
+
 
 	def fit_label(self, data):
 		mapping = {}
 		unique = list(set(data))
 		for index, i in enumerate(unique):
-			mapping[i] = index
+			a = [0]*len(unique)
+			a[index] = 1
+			mapping[i] = a
+		print("SAVE THIS PLEASE")
+		print(mapping)
+		print("_________________________________________")
 		self.label_mapping = mapping
 
 	def tokenizeLabels(self, all):
@@ -59,9 +70,20 @@ class Decomp_tokenizer(object):
 		with open(filename+".json", '+w') as f:
 			f.write(json.dumps(data))
 
-	def tokenizeData(self, data):
-		tokens = self.Tokenizer.texts_to_sequences(tqdm(data))
+	def tokenize_args(self,data):
+		data = self.no_newline(data)
+		tokens = self.Tokenizer_args.texts_to_sequences(tqdm(data))
 		return tokens
+
+	def tokenize_instr(self,data):
+		tokens = self.Tokenizer_instr.texts_to_sequences(tqdm(data))
+		return tokens
+
+	def no_newline(self,data):
+		fin = []
+		for i in data:
+			fin.append(i.replace("\n", " "))
+		return fin
 
 	def __str__(self):
 		return str(self.Tokenizer.word_index)
@@ -79,17 +101,17 @@ class Decomp_tokenizer(object):
 			self.Tokenizer = keras.preprocessing.text.tokenizer_from_json(json.load(f))
 
 
-def write_to_data_file(data,filename, test=False, max_len=0):
+def write_to_data_file(basefolder,data,filename, test=False, max_len=0):
 
 	a = {
 		"data": np_array_to_int(pad_sequences([data[0]], padding='post',maxlen=max_len)[0]),
 		"key": data[1]
 	}
 	if test:
-		with open("data/test/{}.json".format(filename),'w+') as f:
+		with open("{}/test/{}.json".format(basefolder,filename),'w+') as f:
 			f.write(json.dumps(a))
 	else:
-		with open("data/train/{}.json".format(filename),'w+') as f:
+		with open("{}/train/{}.json".format(basefolder,filename),'w+') as f:
 			f.write(json.dumps(a))
 
 def np_array_to_int(data):
