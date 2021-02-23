@@ -1,12 +1,9 @@
-import tensorflow as tf
 import json
-from tensorflow import keras
-import random
-from tqdm import tqdm
-from tensorflow.keras.preprocessing.sequence import pad_sequences
 
+from tensorflow import keras
+from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.preprocessing.text import Tokenizer
-import numpy as np
+from tqdm import tqdm
 
 
 class Decomp_tokenizer(object):
@@ -89,8 +86,10 @@ class Decomp_tokenizer(object):
 		return str(self.Tokenizer.word_index)
 
 	def save_status(self,):
-		with open("Tokenizer_data.json", '+w') as f:
-			f.write(json.dumps(self.Tokenizer.to_json()))
+		with open("Tokenizer_args_data.json", '+w') as f:
+			f.write(json.dumps(self.Tokenizer_args.to_json()))
+		with open("Toekenizer_instr_data.json",'+w') as f:
+			f.write(json.dumps(self.Tokenizer_instr.to_json()))
 		with open("Label_data.json", '+w') as f:
 			f.write(json.dumps(self.label_mapping))
 

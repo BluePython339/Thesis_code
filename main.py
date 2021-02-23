@@ -1,14 +1,11 @@
 import argparse
-from tqdm import tqdm
-import random
-from MalMem import *
-import tensorflow as tf
-import json
-from sizeChecker import get_file_size
-from preprocessor import *
-from tensorflow.keras.preprocessing.sequence import pad_sequences
-from sklearn.model_selection import train_test_split
+
 import numpy as np
+from sklearn.model_selection import train_test_split
+
+from preprocessor import *
+from sizeChecker import get_file_size
+
 parser = argparse.ArgumentParser()
 parser.add_argument("-i", "--input", help="Input csv with file names and types", type=str)
 parser.add_argument("-d", "--data", help="Path to data files", type =str)
@@ -20,7 +17,9 @@ def map_files(csv_data):
 		#print(base_path+i[0])
 		with open(i[0], 'r') as mfile:
 			data = mfile.read()
-			mapped_data.append((data, i[1], i[0]))
+			if i[1] != "Energetic Bear":
+				print(i[1])
+				mapped_data.append((data, i[1], i[0]))
 	return mapped_data
 
 def split_train_test(full_data):
@@ -37,7 +36,7 @@ def open_csv(fname, base_path):
 
 	csv_data = [i.strip('\n').split(',') for i in data]
 	for i in csv_data:
-		if 100 < get_file_size(base_path+i[0]) < 3000000:
+		if 100 < get_file_size(base_path+i[0]) < 500000:
 			fin.append((base_path+i[0],i[1]))
 	return fin
 
@@ -75,9 +74,7 @@ if __name__ == "__main__":
 	args = parser.parse_args()
 	full_data = map_files(open_csv(args.input,args.data))
 
-	#print(len(full_data))
 	train_data, test_data = split_train_test(full_data)
-	#tokenizer.recover_status()
 
 	train_malware = train_data[0]
 	train_keys = [i[0] for i in train_data[1]]
@@ -95,7 +92,7 @@ if __name__ == "__main__":
 	tokenizer.fit_args(tqdm(train_malware))
 	tokenizer.fit_instr(tqdm(train_malware))
 	tokenizer.fit_label(train_keys)
-	#tokenizer.save_status()
+	tokenizer.save_status()
 
 	#tokenizer.recover_status()
 	#tokenizer.save_status()

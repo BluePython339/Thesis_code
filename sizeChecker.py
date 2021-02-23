@@ -23,13 +23,13 @@ def get_file_paths(csvdata, base_path ):
     return fin,apt
 
 if __name__ == "__main__":
-    a, apt = get_file_paths(open_csv("fixed.csv"), "/home/bluepython339/Documents/thesis/decompfiles/data/")
+    a, apt = get_file_paths(open_csv("fixed.csv"), "/Users/barthofman/Documents/thesis/thesis/decompfiles/data/")
     aptfull = apt.copy()
     aptperc = apt.copy()
     b = sorted(a, key=lambda i : i[0])
     for i in b:
         aptfull[i[1]] += 1
-        if 100 < i[0] > int(sys.argv[1]):
+        if 100 < i[0] < int(sys.argv[1]):
             apt[i[1]] += 1
     total_in_scope = 0
     total = 0
@@ -48,13 +48,13 @@ if __name__ == "__main__":
 
     print("total set size: {}".format(total))
     exit()
-    with open("train_set.csv", 'w+') as f:
-        for i in range(1962):
-            f.write("/content/drive/MyDrive/Colab Notebooks/datast/data/train/{}.json\n".format(i))
+    with open("train_set_per_instruction.csv", 'w+') as f:
+        for i in range(1916):#1962
+            f.write("/content/drive/MyDrive/Colab Notebooks/datast/data_per_instruction/train/{}.json\n".format(i))
 
-    with open("test_set.csv", 'w+') as f:
-        for i in range(949):
-            f.write("/content/drive/MyDrive/Colab Notebooks/datast/data/test/{}.json\n".format(i))
+    with open("test_set_per_instruction.csv", 'w+') as f:
+        for i in range(945):#945
+            f.write("/content/drive/MyDrive/Colab Notebooks/datast/data_per_instruction/test/{}.json\n".format(i))
 
 
 
